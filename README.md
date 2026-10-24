@@ -1,193 +1,384 @@
-{
-"nbformat": 4,
-"nbformat_minor": 0,
-"metadata": {
-"colab": {
-"provenance": []
-},
-"kernelspec": {
-"name": "python3",
-"display_name": "Python 3"
-},
-"language_info": {
-"name": "python"
-}
-},
-"cells": [
-{
-"cell_type": "markdown",
-"metadata": {},
-"source": [
-"# 🚀 跨平台自我複製引擎與網頁端 HTML 控制台\n",
-"\n",
-"本筆記本整合了自動化滾動繁衍腳本與 HTML/CSS/JS 響應式介面，支援在 Google Colab 及本機 Python 環境中獨立執行與視覺化控制。"
-]
-},
-{
-"cell_type": "code",
-"execution_count": null,
-"metadata": {},
-"outputs": [],
-"source": [
-"# -- coding: utf-8 --\n",
-"import os\n",
-"import sys\n",
-"import glob\n",
-"import subprocess\n",
-"import time\n",
-"from pathlib import Path\n",
-"\n",
-"# 1. 自動清理殘留的舊檔案與記錄\n",
-"def cleanup_old_files():\n",
-"    base_dir = Path.cwd()\n",
-"    file_list = list(base_dir.glob('node_gen*_id*.py')) + list(base_dir.glob('log_gen*.txt'))\n",
-"    if file_list:\n",
-"        print("--- [系統] 正在清理殘留的舊檔案與記錄 ---")\n",
-"        for filepath in file_list:\n",
-"            try:\n",
-"                filepath.unlink()\n",
-"            except Exception:\n",
-"                pass\n",
-"        print("清理完成。\n")\n",
-"\n",
-"# 2. 跨平台核心自我複製模板\n",
-"NODE_SCRIPT_TEMPLATE = '''# -- coding: utf-8 --\n",
-"import os\n",
-"import sys\n",
-"import glob\n",
-"import subprocess\n",
-"import time\n",
-"from pathlib import Path\n",
-"\n",
-"GEN = {gen}\n",
-"NODE_ID = {node_id}\n",
-"SESSION_ID = {session_id}\n",
-"\n",
-"def main():\n",
-"    current_file = Path(file).resolve()\n",
-"    print(f"--- [獨立執行] 世代 {GEN} 節點 {NODE_ID} (PID: {os.getpid()}) ---", flush=True)\n",
-"    print(1, flush=True)\n",
-"\n",
-"    next_gen = GEN + 1\n",
-"    left_id = NODE_ID * 2\n",
-"    right_id = NODE_ID * 2 + 1\n",
-"\n",
-"    base_dir = current_file.parent\n",
-"    left_filename = base_dir / f"node_gen{next_gen}_id{left_id}_t{SESSION_ID}.py"\n",
-"    right_filename = base_dir / f"node_gen{next_gen}_id{right_id}_t{SESSION_ID}.py"\n",
-"\n",
-"    try:\n",
-"        with open(current_file, 'r', encoding='utf-8') as f:\n",
-"            source_code = f.read()\n",
-"\n",
-"        left_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {left_id}")\n",
-"        right_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {right_id}")\n",
-"\n",
-"        with open(left_filename, 'w', encoding='utf-8') as f:\n",
-"            f.write(left_code)\n",
-"        with open(right_filename, 'w', encoding='utf-8') as f:\n",
-"            f.write(right_code)\n",
-"\n",
-"        # === 滾動式邊生邊刪機制 (.py 檔案) ===\n",
-"        all_nodes = sorted(base_dir.glob(f"node_gen*_id*_t{SESSION_ID}.py"), key=lambda p: p.stat().st_mtime)\n",
-"        while len(all_nodes) > 6:\n",
-"            oldest_file = all_nodes.pop(0)\n",
-"            if oldest_file != current_file:\n",
-"                try:\n",
-"                    oldest_file.unlink()\n",
-"                    print(f"[邊生邊刪] 點子 .py 過多，已刪除最舊檔案: {oldest_file.name}", flush=True)\n",
-"                except Exception:\n",
-"                    pass\n",
-"\n",
-"        # === 滾動式邊生邊刪機制 (log 檔案) =\n",
-"        all_logs = sorted(base_dir.glob("log_gen*.txt"), key=lambda p: p.stat().st_mtime)\n",
-"        while len(all_logs) > 6:\n",
-"            oldest_log = all_logs.pop(0)\n",
-"            try:\n",
-"                oldest_log.unlink()\n",
-"                print(f"[邊生邊刪] Log 檔過多，已刪除最舊記錄: {oldest_log.name}", flush=True)\n",
-"            except Exception:\n",
-"                pass\n",
-"\n",
-"        log_left = open(base_dir / f"log_gen{next_gen}_id{left_id}.txt", "w", encoding="utf-8")\n",
-"        log_right = open(base_dir / f"log_gen{next_gen}_id{right_id}.txt", "w", encoding="utf-8")\n",
-"\n",
-"        time.sleep(1)\n",
-"\n",
-"        executable = sys.executable\n",
-"        if left_filename.exists():\n",
-"            subprocess.Popen([executable, str(left_filename)], stdout=log_left, stderr=log_left)\n",
-"        if right_filename.exists():\n",
-"            subprocess.Popen([executable, str(right_filename)], stdout=log_right, stderr=log_right)\n",
-"\n",
-"    except Exception as e:\n",
-"        print(f"【繁衍過程發生例外錯誤】: {e}", flush=True)\n",
-"\n",
-"if name == 'main':\n",
-"    main()\n",
-"'''\n",
-"\n",
-"def run_cross_platform_engine():\n",
-"    cleanup_old_files()\n",
-"\n",
-"    session_id = int(time.time())\n",
-"    print(f"= 開始執行：跨平台相容自我複製引擎 (Session ID = {session_id}) =")\n",
-"\n",
-"    root_filename = Path.cwd() / f"node_gen1_id1_t{session_id}.py"\n",
-"\n",
-"    root_code = NODE_SCRIPT_TEMPLATE.format(gen=1, node_id=1, session_id=session_id)\n",
-"    with open(root_filename, 'w', encoding='utf-8') as f:\n",
-"        f.write(root_code)\n",
-"\n",
-"    print(f"[主系統] 正在啟動根檔案: {root_filename.name}\n")\n",
-"    subprocess.Popen([sys.executable, str(root_filename)])\n",
-"    print("= 引擎已全速運轉！已完美支援跨平台路徑與雙重邊生邊刪機制。 ===")\n",
-"\n",
-"if name == 'main':\n",
-"    run_cross_platform_engine()"
-]
-},
-{
-"cell_type": "code",
-"execution_count": null,
-"metadata": {},
-"outputs": [],
-"source": [
-"# --- 🤖 HTML 可用控制台與極簡儀表板 ---\n",
-"import IPython.display as display\n",
-"\n",
-"html_ui_code = '''\n",
-"<div style="padding: 24px; background: linear-gradient(135deg, #0d1117, #161b22); color: #c9d1d9; border-radius: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">\n",
-"    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #21262d; padding-bottom: 12px; margin-bottom: 16px;">\n",
-"        <h2 style="margin: 0; color: #58a6ff; font-size: 20px; display: flex; align-items: center; gap: 8px;">\n",
-"            ⚡ 跨平台自我複製引擎 (HTML 控制面板)\n",
-"        \n",
-"        <span style="background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">● 系統運作中\n",
-"    \n",
-"    \n",
-"    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">\n",
-"        <div style="background: #21262d; padding: 12px; border-radius: 8px; border: 1px solid #30363d;">\n",
-"            <div style="font-size: 12px; color: #8b949e;">繁衍模式\n",
-"            <div style="font-size: 16px; font-weight: bold; color: #f0f6fc; margin-top: 4px;">二元樹雙重節點\n",
-"        \n",
-"        <div style="background: #21262d; padding: 12px; border-radius: 8px; border: 1px solid #30363d;">\n",
-"            <div style="font-size: 12px; color: #8b949e;">記憶體保護\n",
-"            <div style="font-size: 16px; font-weight: bold; color: #f0f6fc; margin-top: 4px;">雙重滾動清理 (≤ 6 檔)\n",
-"        \n",
-"        <div style="background: #21262d; padding: 12px; border-radius: 8px; border: 1px solid #30363d;">\n",
-"            <div style="font-size: 12px; color: #8b949e;">相容平台\n",
-"            <div style="font-size: 16px; font-weight: bold; color: #f0f6fc; margin-top: 4px;">Windows / Linux / macOS\n",
-"        \n",
-"    \n",
-"\n",
-"    <div style="display: flex; gap: 10px;">\n",
-"        <button onclick="alert('狀態正常：引擎已配置完成，可於上一格運行 Python 核心機制！')" style="background: #238636; color: #ffffff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;">測試互動連線\n",
-"        <button onclick="console.log('HTML UI Console Log Triggered'); alert('即時日誌：滾動式邊生邊刪機制監控中');" style="background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">檢視日誌狀態\n",
-"    \n",
-"\n",
-"'''\n",
-"display.display(display.HTML(html_ui_code))\n"
-]
-}
-]
-}
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跨平台自我複製引擎 - GitHub 控制台</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b',
+                        neonblue: '#00f0ff',
+                        neongreen: '#39ff14',
+                        neonred: '#ff0055',
+                        bordercolor: '#334155'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .neon-border-blue {
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+            border: 1px solid rgba(0, 240, 255, 0.5);
+        }
+        .neon-border-green {
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+        }
+        .console-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .console-scrollbar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .console-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .pulse-active {
+            animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col justify-between">
+
+    <!-- Header Section -->
+    <header class="max-w-7xl mx-auto w-full mb-8">
+        <div class="bg-cardbg rounded-2xl p-6 border border-bordercolor shadow-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-slate-800 rounded-xl border border-neonblue text-neonblue text-2xl">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wide text-white flex items-center gap-2">
+                        跨平台複製引擎控制台
+                        <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-neonblue border border-neonblue/40">v2.4 Live</span>
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1">二元樹雙重節點繁衍 & 滾動式「邊生邊刪」機制視覺化監控系統</p>
+                </div>
+            </div>
+            <!-- Status Badge -->
+            <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-xl border border-bordercolor">
+                <span id="status-indicator" class="w-3 h-3 rounded-full bg-slate-500"></span>
+                <span id="status-text" class="text-sm font-semibold text-slate-400">已關閉 (OFFLINE)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Left Panel: Controls & Metrics -->
+        <div class="space-y-6">
+            <!-- Control Buttons Card -->
+            <div class="bg-cardbg rounded-2xl p-6 border border-bordercolor shadow-xl">
+                <h2 class="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad text-neonblue"></i> 引擎操作指令
+                </h2>
+                <div class="space-y-3">
+                    <button id="btn-start" onclick="startEngine()" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30">
+                        <i class="fa-solid fa-play"></i> 🚀 啟動引擎 (Start)
+                    </button>
+                    <button id="btn-stop" onclick="stopEngine()" disabled class="w-full py-3 px-4 bg-slate-700 text-slate-500 font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-not-allowed">
+                        <i class="fa-solid fa-stop"></i> 🛑 關閉引擎 (Stop)
+                    </button>
+                    <button id="btn-restart" onclick="restartEngine()" disabled class="w-full py-3 px-4 bg-slate-700 text-slate-500 font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-not-allowed">
+                        <i class="fa-solid fa-rotate"></i> 🔄 重新啟動 (Restart)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-cardbg p-4 rounded-xl border border-bordercolor">
+                    <div class="text-xs text-slate-400 mb-1">當前世代 (GEN)</div>
+                    <div id="stat-gen" class="text-2xl font-bold text-neonblue">0</div>
+                </div>
+                <div class="bg-cardbg p-4 rounded-xl border border-bordercolor">
+                    <div class="text-xs text-slate-400 mb-1">活躍檔案佇列</div>
+                    <div id="stat-files" class="text-2xl font-bold text-neongreen">0 / 6</div>
+                </div>
+                <div class="bg-cardbg p-4 rounded-xl border border-bordercolor">
+                    <div class="text-xs text-slate-400 mb-1">總繁衍節點數</div>
+                    <div id="stat-total" class="text-2xl font-bold text-slate-200">0</div>
+                </div>
+                <div class="bg-cardbg p-4 rounded-xl border border-bordercolor">
+                    <div class="text-xs text-slate-400 mb-1">已觸發「邊生邊刪」</div>
+                    <div id="stat-deleted" class="text-2xl font-bold text-neonred">0 次</div>
+                </div>
+            </div>
+
+            <!-- System Info Card -->
+            <div class="bg-cardbg rounded-2xl p-5 border border-bordercolor text-xs text-slate-400 space-y-2">
+                <div class="flex justify-between border-b border-slate-700 pb-2">
+                    <span>繁衍機制:</span>
+                    <span class="text-slate-200 font-mono">二元樹分裂 (2x, 2x+1)</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-700 pb-2">
+                    <span>佇列容量:</span>
+                    <span class="text-slate-200 font-mono">Max 6 Py / 6 Log 檔</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>相容平台:</span>
+                    <span class="text-slate-200 font-mono">Windows / macOS / Linux</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: File System Observer & Live Console -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- File Observer -->
+            <div class="bg-cardbg rounded-2xl p-6 border border-bordercolor shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-folder-tree text-neongreen"></i> 動態檔案觀察器 (Max 6 檔佇列)
+                    </h2>
+                    <span class="text-xs text-slate-400 font-mono">自動移除過期舊檔</span>
+                </div>
+
+                <!-- Node Files Pool -->
+                <div class="mb-4">
+                    <div class="text-xs text-slate-400 mb-2 font-mono flex items-center gap-1">
+                        <i class="fa-brands fa-python text-yellow-400"></i> Python 節點檔案 (.py)
+                    </div>
+                    <div id="py-file-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 min-h-[90px] p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                        <div class="text-slate-600 text-xs italic col-span-full flex items-center justify-center h-16">系統未啟動</div>
+                    </div>
+                </div>
+
+                <!-- Log Files Pool -->
+                <div>
+                    <div class="text-xs text-slate-400 mb-2 font-mono flex items-center gap-1">
+                        <i class="fa-solid fa-file-lines text-blue-400"></i> 日誌檔案 (.txt)
+                    </div>
+                    <div id="log-file-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 min-h-[90px] p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                        <div class="text-slate-600 text-xs italic col-span-full flex items-center justify-center h-16">系統未啟動</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Console Output Card -->
+            <div class="bg-cardbg rounded-2xl p-6 border border-bordercolor shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-terminal text-neonblue"></i> 實時 Console 記錄檔 (Live Output)
+                    </h2>
+                    <button onclick="clearConsole()" class="text-xs text-slate-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-trash-can"></i> 清除紀錄
+                    </button>
+                </div>
+                <div id="console-output" class="bg-slate-950 font-mono text-xs text-emerald-400 p-4 rounded-xl h-56 overflow-y-auto console-scrollbar border border-slate-800 space-y-1">
+                    <div class="text-slate-500">[System] 靜態控制介面初始化完成。等待啟動指令...</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto w-full mt-8 text-center text-xs text-slate-500">
+        <p>GitHub Pages Ready • Standalone HTML Console Environment</p>
+    </footer>
+
+    <!-- Logic Controller -->
+    <script>
+        let isRunning = false;
+        let timer = null;
+        let gen = 1;
+        let nodeId = 1;
+        let sessionId = 0;
+        let totalCount = 0;
+        let deletedCount = 0;
+
+        let pyQueue = [];
+        let logQueue = [];
+
+        function updateUIState() {
+            const btnStart = document.getElementById('btn-start');
+            const btnStop = document.getElementById('btn-stop');
+            const btnRestart = document.getElementById('btn-restart');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+
+            if (isRunning) {
+                btnStart.disabled = true;
+                btnStart.className = "w-full py-3 px-4 bg-slate-700 text-slate-500 font-bold rounded-xl cursor-not-allowed";
+                
+                btnStop.disabled = false;
+                btnStop.className = "w-full py-3 px-4 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-rose-900/30";
+                
+                btnRestart.disabled = false;
+                btnRestart.className = "w-full py-3 px-4 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-amber-900/30";
+
+                statusIndicator.className = "w-3 h-3 rounded-full bg-neongreen pulse-active";
+                statusText.className = "text-sm font-semibold text-neongreen";
+                statusText.innerText = "全速運轉中 (RUNNING)";
+            } else {
+                btnStart.disabled = false;
+                btnStart.className = "w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30";
+
+                btnStop.disabled = true;
+                btnStop.className = "w-full py-3 px-4 bg-slate-700 text-slate-500 font-bold rounded-xl cursor-not-allowed";
+
+                btnRestart.disabled = true;
+                btnRestart.className = "w-full py-3 px-4 bg-slate-700 text-slate-500 font-bold rounded-xl cursor-not-allowed";
+
+                statusIndicator.className = "w-3 h-3 rounded-full bg-slate-500";
+                statusText.className = "text-sm font-semibold text-slate-400";
+                statusText.innerText = "已關閉 (OFFLINE)";
+            }
+
+            document.getElementById('stat-gen').innerText = isRunning ? gen : 0;
+            document.getElementById('stat-files').innerText = `${pyQueue.length} / 6`;
+            document.getElementById('stat-total').innerText = totalCount;
+            document.getElementById('stat-deleted').innerText = `${deletedCount} 次`;
+        }
+
+        function logConsole(msg, type = 'info') {
+            const consoleBox = document.getElementById('console-output');
+            const entry = document.createElement('div');
+            const timeStr = new Date().toLocaleTimeString();
+
+            if (type === 'danger') {
+                entry.className = "text-rose-400 font-semibold";
+            } else if (type === 'warning') {
+                entry.className = "text-yellow-400";
+            } else if (type === 'success') {
+                entry.className = "text-neongreen";
+            } else {
+                entry.className = "text-emerald-400";
+            }
+
+            entry.innerText = `[${timeStr}] ${msg}`;
+            consoleBox.appendChild(entry);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = '';
+            logConsole("控制台紀錄已清除。");
+        }
+
+        function startEngine() {
+            if (isRunning) return;
+            isRunning = true;
+            sessionId = Math.floor(Date.now() / 1000);
+            gen = 1;
+            nodeId = 1;
+            totalCount = 0;
+            deletedCount = 0;
+            pyQueue = [];
+            logQueue = [];
+
+            logConsole(`=== 啟動跨平台複製引擎 (Session ID: ${sessionId}) ===`, 'success');
+            logConsole("--- [系統] 正在清理殘留的舊檔案與記錄 ---", 'warning');
+            
+            updateUIState();
+            stepEngine();
+
+            timer = setInterval(stepEngine, 2200);
+        }
+
+        function stopEngine() {
+            if (!isRunning) return;
+            isRunning = false;
+            clearInterval(timer);
+            logConsole("🛑 引擎已停止運作。", 'danger');
+            updateUIState();
+        }
+
+        function restartEngine() {
+            stopEngine();
+            setTimeout(() => {
+                startEngine();
+            }, 500);
+        }
+
+        function stepEngine() {
+            if (!isRunning) return;
+
+            const nextGen = gen + 1;
+            const leftId = nodeId * 2;
+            const rightId = nodeId * 2 + 1;
+
+            const leftPy = `node_gen${nextGen}_id${leftId}_t${sessionId}.py`;
+            const rightPy = `node_gen${nextGen}_id${rightId}_t${sessionId}.py`;
+
+            const leftLog = `log_gen${nextGen}_id${leftId}.txt`;
+            const rightLog = `log_gen${nextGen}_id${rightId}.txt`;
+
+            // Push Left & Right Nodes
+            addFileToQueue(pyQueue, leftPy, 'py');
+            addFileToQueue(pyQueue, rightPy, 'py');
+            addFileToQueue(logQueue, leftLog, 'log');
+            addFileToQueue(logQueue, rightLog, 'log');
+
+            totalCount += 2;
+            logConsole(`[世代 ${gen}] 節點 ID ${nodeId} 已分裂生成: ${leftPy} & ${rightPy}`);
+
+            gen = nextGen;
+            nodeId = leftId; // Advance binary tree left branch
+
+            renderFiles();
+            updateUIState();
+        }
+
+        function addFileToQueue(queue, fileName, type) {
+            queue.push(fileName);
+            if (queue.length > 6) {
+                const removed = queue.shift();
+                deletedCount++;
+                if (type === 'py') {
+                    logConsole(`[邊生邊刪] 節點 .py 過多，已刪除最舊檔案: ${removed}`, 'danger');
+                } else {
+                    logConsole(`[邊生邊刪] Log 檔過多，已刪除最舊記錄: ${removed}`, 'warning');
+                }
+            }
+        }
+
+        function renderFiles() {
+            const pyContainer = document.getElementById('py-file-container');
+            const logContainer = document.getElementById('log-file-container');
+
+            if (pyQueue.length === 0) {
+                pyContainer.innerHTML = `<div class="text-slate-600 text-xs italic col-span-full flex items-center justify-center h-16">系統未啟動</div>`;
+            } else {
+                pyContainer.innerHTML = pyQueue.map((file, idx) => `
+                    <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700 flex items-center justify-between text-xs animate-fade-in">
+                        <span class="font-mono text-emerald-300 truncate"><i class="fa-brands fa-python mr-1.5 text-yellow-400"></i>${file}</span>
+                        <span class="text-[10px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-400">#${idx + 1}</span>
+                    </div>
+                `).join('');
+            }
+
+            if (logQueue.length === 0) {
+                logContainer.innerHTML = `<div class="text-slate-600 text-xs italic col-span-full flex items-center justify-center h-16">系統未啟動</div>`;
+            } else {
+                logContainer.innerHTML = logQueue.map((file, idx) => `
+                    <div class="bg-slate-800 p-2.5 rounded-lg border border-slate-700 flex items-center justify-between text-xs animate-fade-in">
+                        <span class="font-mono text-blue-300 truncate"><i class="fa-solid fa-file-lines mr-1.5 text-blue-400"></i>${file}</span>
+                        <span class="text-[10px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-400">#${idx + 1}</span>
+                    </div>
+                `).join('');
+            }
+        }
+    </script>
+</body>
+</html>
