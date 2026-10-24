@@ -6,17 +6,18 @@
     <title>安全隔離型跨平台自我複製引擎控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap');
+       @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap');
+        family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap)');
         body { font-family: 'Inter', sans-serif; }
         .terminal-font { font-family: 'Fira Code', monospace; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-4 md:p-8">
 
-    <div class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+ <div class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         
         <!-- 頂部標題列 -->
-        <div class="bg-slate-850 px-6 py-4 border-b border-slate-800 flex flex-wrap justify-between items-center gap-4">
+<div class="bg-slate-850 px-6 py-4 border-b border-slate-800 flex flex-wrap justify-between items-center gap-4">
             <div>
                 <h1 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
                     <span>🛡️</span> 獨立沙箱實體檔案引擎控制台
@@ -29,10 +30,10 @@
         </div>
 
         <!-- 控制面板區 -->
-        <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-slate-800 bg-slate-900/50">
+<div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-slate-800 bg-slate-900/50">
             
             <!-- 按鈕操作 -->
-            <div class="flex flex-col justify-between gap-3">
+<div class="flex flex-col justify-between gap-3">
                 <label class="text-sm font-semibold text-slate-300">⚙️ 引擎狀態控制</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="initDirectoryAndStart()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
@@ -48,7 +49,7 @@
             </div>
 
             <!-- 數量調節滑桿 -->
-            <div class="flex flex-col justify-between gap-2">
+<div class="flex flex-col justify-between gap-2">
                 <div class="flex justify-between items-center">
                     <label class="text-sm font-semibold text-slate-300">🎚️ 專屬檔數上限限制</label>
                     <span id="max-files-val" class="text-cyan-400 font-bold terminal-font bg-slate-800 px-2 py-0.5 rounded">6</span>
@@ -59,7 +60,7 @@
             </div>
 
             <!-- 數據統計 -->
-            <div class="flex flex-col justify-between gap-2 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
+ <div class="flex flex-col justify-between gap-2 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
                 <div class="flex justify-between">
                     <span class="text-slate-400">當前世代 (GEN):</span>
                     <span id="stat-gen" class="text-cyan-400 font-bold terminal-font">1</span>
@@ -76,7 +77,7 @@
         </div>
 
         <!-- 檔案觀察與 Log 區 -->
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-800">
+ <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-800">
             <!-- 實體檔案清單 -->
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
                 <h3 class="text-sm font-semibold text-slate-300 mb-3 flex justify-between">
@@ -89,7 +90,7 @@
             </div>
 
             <!-- 終端機 Log -->
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
+ <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
                 <h3 class="text-sm font-semibold text-slate-300 mb-3 flex justify-between">
                     <span>💻 安全隔離日誌 (Console Log)</span>
                     <button onclick="clearLogs()" class="text-xs text-slate-500 hover:text-cyan-400">清空</button>
@@ -100,12 +101,12 @@
             </div>
         </div>
 
-        <div class="px-6 py-3 bg-slate-950 text-center text-xs text-slate-500 border-t border-slate-800">
+ <div class="px-6 py-3 bg-slate-950 text-center text-xs text-slate-500 border-t border-slate-800">
             GitHub Pages Hosted ｜ 100% Secure Isolated Client-Side Execution
         </div>
     </div>
 
-    <script>
+<script>
         let dirHandle = null;
         let isRunning = false;
         let maxFiles = 6;
@@ -115,87 +116,83 @@
         let activeLogFiles = [];
         let loopTimer = null;
 
-        // 完整包含原始腳本的所有功能：清理舊檔、跨平台 pathlib、自我複製 DNA 突變、雙重滾動刪除、subprocess 異步啟動
-        const NODE_SCRIPT_TEMPLATE = `# -*- coding: utf-8 -*-
-import os
-import sys
-import glob
-import subprocess
-import time
-from pathlib import Path
-
-GEN = {gen}
-NODE_ID = {node_id}
-SESSION_ID = {session_id}
-
-def main():
-    current_file = Path(__file__).resolve()
-    print(f"--- [獨立執行] 世代 {GEN} 節點 {NODE_ID} (PID: {os.getpid()}) ---", flush=True)
-    print(1, flush=True)
-
-    next_gen = GEN + 1
-    left_id = NODE_ID * 2
-    right_id = NODE_ID * 2 + 1
-
-    # 使用 pathlib 確保跨平台路徑萬無一失
-    base_dir = current_file.parent
-    left_filename = base_dir / f"node_gen{next_gen}_id{left_id}_t{SESSION_ID}.py"
-    right_filename = base_dir / f"node_gen{next_gen}_id{right_id}_t{SESSION_ID}.py"
-
-    try:
-        # 讀取自己的原始碼進行自我複製
-        with open(current_file, 'r', encoding='utf-8') as f:
-            source_code = f.read()
-
-        # 突變 DNA（替換變數）
-        left_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {left_id}")
-        right_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {right_id}")
-
-        # 寫入左右子檔案
-        with open(left_filename, 'w', encoding='utf-8') as f:
-            f.write(left_code)
-        with open(right_filename, 'w', encoding='utf-8') as f:
-            f.write(right_code)
-
-        # === 滾動式邊生邊刪機制 (.py 檔案) ===
-        all_nodes = sorted(base_dir.glob(f"node_gen*_id*_t{SESSION_ID}.py"), key=lambda p: p.stat().st_mtime)
-        while len(all_nodes) > 6:
-            oldest_file = all_nodes.pop(0)
-            if oldest_file != current_file:
-                try:
-                    oldest_file.unlink()
-                    print(f"[邊生邊刪] .py 過多，已刪除最舊檔案: {oldest_file.name}", flush=True)
-                except Exception:
-                    pass
-
-        # === 滾動式邊生邊刪機制 (log 檔案) ===
-        all_logs = sorted(base_dir.glob("log_gen*.txt"), key=lambda p: p.stat().st_mtime)
-        while len(all_logs) > 6:
-            oldest_log = all_logs.pop(0)
-            try:
-                oldest_log.unlink()
-                print(f"[邊生邊刪] Log 檔過多，已刪除最舊記錄: {oldest_log.name}", flush=True)
-            except Exception:
-                pass
-
-        # 建立跨平台 Log 檔
-        log_left = open(base_dir / f"log_gen{next_gen}_id{left_id}.txt", "w", encoding="utf-8")
-        log_right = open(base_dir / f"log_gen{next_gen}_id{right_id}.txt", "w", encoding="utf-8")
-
-        time.sleep(1)
-
-        # 在背景非同步啟動子檔案（相容於直譯器與打包後的獨立執行檔）
-        executable = sys.executable
-        if left_filename.exists():
-            subprocess.Popen([executable, str(left_filename)], stdout=log_left, stderr=log_left)
-        if right_filename.exists():
-            subprocess.Popen([executable, str(right_filename)], stdout=log_right, stderr=log_right)
-
-    except Exception as e:
-        print(f"【繁衍過程發生例外錯誤】: {e}", flush=True)
-
-if __name__ == '__main__':
-    main()`;
+        // 使用安全的陣列拼接取代長字串，徹底解決引號與跳脫字元崩潰問題
+        function generatePythonScript(gen, nodeId, sessionId) {
+            const lines = [
+                `# -*- coding: utf-8 -*-`,
+                `import os`,
+                `import sys`,
+                `import glob`,
+                `import subprocess`,
+                `import time`,
+                `from pathlib import Path`,
+                ``,
+                `GEN = ${gen}`,
+                `NODE_ID = ${nodeId}`,
+                `SESSION_ID = ${sessionId}`,
+                ``,
+                `def main():`,
+                `    current_file = Path(__file__).resolve()`,
+                `    print(f"--- [獨立執行] 世代 {GEN} 節點 {NODE_ID} (PID: {os.getpid()}) ---", flush=True)`,
+                `    print(1, flush=True)`,
+                ``,
+                `    next_gen = GEN + 1`,
+                `    left_id = NODE_ID * 2`,
+                `    right_id = NODE_ID * 2 + 1`,
+                ``,
+                `    base_dir = current_file.parent`,
+                `    left_filename = base_dir / f"node_gen{next_gen}_id{left_id}_t{SESSION_ID}.py"`,
+                `    right_filename = base_dir / f"node_gen{next_gen}_id{right_id}_t{SESSION_ID}.py"`,
+                ``,
+                `    try:`,
+                `        with open(current_file, 'r', encoding='utf-8') as f:`,
+                `            source_code = f.read()`,
+                ``,
+                `        left_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {left_id}")`,
+                `        right_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {right_id}")`,
+                ``,
+                `        with open(left_filename, 'w', encoding='utf-8') as f:`,
+                `            f.write(left_code)`,
+                `        with open(right_filename, 'w', encoding='utf-8') as f:`,
+                `            f.write(right_code)`,
+                ``,
+                `        all_nodes = sorted(base_dir.glob(f"node_gen*_id*_t{SESSION_ID}.py"), key=lambda p: p.stat().st_mtime)`,
+                `        while len(all_nodes) > 6:`,
+                `            oldest_file = all_nodes.pop(0)`,
+                `            if oldest_file != current_file:`,
+                `                try:`,
+                `                    oldest_file.unlink()`,
+                `                    print(f"[邊生邊刪] .py 過多，已刪除最舊檔案: {oldest_file.name}", flush=True)`,
+                `                except Exception:`,
+                `                    pass`,
+                ``,
+                `        all_logs = sorted(base_dir.glob("log_gen*.txt"), key=lambda p: p.stat().st_mtime)`,
+                `        while len(all_logs) > 6:`,
+                `            oldest_log = all_logs.pop(0)`,
+                `            try:`,
+                `                oldest_log.unlink()`,
+                `                print(f"[邊生邊刪] Log 檔過多，已刪除最舊記錄: {oldest_log.name}", flush=True)`,
+                `            except Exception:`,
+                `                pass`,
+                ``,
+                `        log_left = open(base_dir / f"log_gen{next_gen}_id{left_id}.txt", "w", encoding="utf-8")`,
+                `        log_right = open(base_dir / f"log_gen{next_gen}_id{right_id}.txt", "w", encoding="utf-8")`,
+                ``,
+                `        time.sleep(1)`,
+                `        executable = sys.executable`,
+                `        if left_filename.exists():`,
+                `            subprocess.Popen([executable, str(left_filename)], stdout=log_left, stderr=log_left)`,
+                `        if right_filename.exists():`,
+                `            subprocess.Popen([executable, str(right_filename)], stdout=log_right, stderr=log_right)`,
+                ``,
+                `    except Exception as e:`,
+                `        print(f"【繁衍過程發生例外錯誤】: {e}", flush=True)`,
+                ``,
+                `if __name__ == '__main__':`,
+                `    main()`
+            ];
+            return lines.join('\n');
+        }
 
         function updateMaxFiles(val) {
             maxFiles = parseInt(val);
@@ -261,9 +258,8 @@ if __name__ == '__main__':
                 const logName1 = `log_gen${currentGen}_id${leftId}.txt`;
                 const logName2 = `log_gen${currentGen}_id${rightId}.txt`;
 
-                // 產生完整原始演算法規格的程式碼
-                const pyContent1 = NODE_SCRIPT_TEMPLATE.replace('{gen}', currentGen).replace('{node_id}', leftId).replace('{session_id}', sessionId);
-                const pyContent2 = NODE_SCRIPT_TEMPLATE.replace('{gen}', currentGen).replace('{node_id}', rightId).replace('{session_id}', sessionId);
+                const pyContent1 = generatePythonScript(currentGen, leftId, sessionId);
+                const pyContent2 = generatePythonScript(currentGen, rightId, sessionId);
 
                 await createFileInDevice(pyName1, pyContent1);
                 await createFileInDevice(pyName2, pyContent2);
@@ -275,7 +271,6 @@ if __name__ == '__main__':
 
                 appendLog(`[世代 ${currentGen}] 實體寫入完整原碼: ${pyName1}, ${pyName2}`);
 
-                // 滾動式邊生邊刪
                 while (activePyFiles.length > maxFiles) {
                     const oldestPy = activePyFiles.shift();
                     await removeFileFromDevice(oldestPy);
