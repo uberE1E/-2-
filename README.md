@@ -6,15 +6,14 @@
     <title>安全隔離型跨平台自我複製引擎控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-       @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap');
-        family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap)');
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .terminal-font { font-family: 'Fira Code', monospace; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-4 md:p-8">
 
- <div class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+<div class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         
         <!-- 頂部標題列 -->
 <div class="bg-slate-850 px-6 py-4 border-b border-slate-800 flex flex-wrap justify-between items-center gap-4">
@@ -60,7 +59,7 @@
             </div>
 
             <!-- 數據統計 -->
- <div class="flex flex-col justify-between gap-2 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
+<div class="flex flex-col justify-between gap-2 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
                 <div class="flex justify-between">
                     <span class="text-slate-400">當前世代 (GEN):</span>
                     <span id="stat-gen" class="text-cyan-400 font-bold terminal-font">1</span>
@@ -77,7 +76,7 @@
         </div>
 
         <!-- 檔案觀察與 Log 區 -->
- <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-800">
+<div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-800">
             <!-- 實體檔案清單 -->
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
                 <h3 class="text-sm font-semibold text-slate-300 mb-3 flex justify-between">
@@ -90,7 +89,7 @@
             </div>
 
             <!-- 終端機 Log -->
- <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
+<div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
                 <h3 class="text-sm font-semibold text-slate-300 mb-3 flex justify-between">
                     <span>💻 安全隔離日誌 (Console Log)</span>
                     <button onclick="clearLogs()" class="text-xs text-slate-500 hover:text-cyan-400">清空</button>
@@ -101,7 +100,7 @@
             </div>
         </div>
 
- <div class="px-6 py-3 bg-slate-950 text-center text-xs text-slate-500 border-t border-slate-800">
+<div class="px-6 py-3 bg-slate-950 text-center text-xs text-slate-500 border-t border-slate-800">
             GitHub Pages Hosted ｜ 100% Secure Isolated Client-Side Execution
         </div>
     </div>
@@ -116,7 +115,6 @@
         let activeLogFiles = [];
         let loopTimer = null;
 
-        // 使用安全的陣列拼接取代長字串，徹底解決引號與跳脫字元崩潰問題
         function generatePythonScript(gen, nodeId, sessionId) {
             const lines = [
                 `# -*- coding: utf-8 -*-`,
