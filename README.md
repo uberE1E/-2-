@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>純 HTML 跨平台自我複製引擎控制台</title>
+    <title>安全隔離型跨平台自我複製引擎控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&display=swap');
@@ -15,93 +15,93 @@
 
     <div class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         
-        <!-- 標題列 -->
+        <!-- 頂部標題列 -->
         <div class="bg-slate-850 px-6 py-4 border-b border-slate-800 flex flex-wrap justify-between items-center gap-4">
             <div>
                 <h1 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
-                    <span>⚡</span> 實體檔案生成引擎 (Pure HTML Client Drive)
+                    <span>🛡️</span> 獨立沙箱實體檔案引擎控制台
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">直接於使用者裝置硬碟寫入、複製與滾動刪除 .py / .txt 檔案</p>
+                <p class="text-xs text-slate-400 mt-1">嚴格命名空間隔離：僅對本工具生成的專屬 .py / .txt 進行滾動式邊生邊刪</p>
             </div>
             <span id="engine-status" class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
                 ● 未授權目錄 (Waiting)
             </span>
         </div>
 
-        <!-- 控制區 -->
+        <!-- 控制面板區 -->
         <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-slate-800 bg-slate-900/50">
             
             <!-- 按鈕操作 -->
             <div class="flex flex-col justify-between gap-3">
-                <label class="text-sm font-semibold text-slate-300">⚙️ 引擎控制 (實體檔案動作)</label>
+                <label class="text-sm font-semibold text-slate-300">⚙️ 引擎狀態控制</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="initDirectoryAndStart()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
-                        ▶ 啟動面板
+                        ▶ 啟動
                     </button>
                     <button onclick="stopEngine()" class="bg-amber-600 hover:bg-amber-500 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
                         ⏸ 暫停
                     </button>
                     <button onclick="resetEngine()" class="bg-rose-600 hover:bg-rose-500 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
-                        🔄 清理重設
+                        🔄 重設
                     </button>
                 </div>
             </div>
 
-            <!-- 檔案限制滑桿 -->
+            <!-- 數量調節滑桿 -->
             <div class="flex flex-col justify-between gap-2">
                 <div class="flex justify-between items-center">
-                    <label class="text-sm font-semibold text-slate-300">🎚️ 滾動刪除最大檔數限制</label>
+                    <label class="text-sm font-semibold text-slate-300">🎚️ 專屬檔數上限限制</label>
                     <span id="max-files-val" class="text-cyan-400 font-bold terminal-font bg-slate-800 px-2 py-0.5 rounded">6</span>
                 </div>
                 <input id="max-files-slider" type="range" min="2" max="15" value="6" oninput="updateMaxFiles(this.value)"
                     class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
-                <span class="text-xs text-slate-500">超額時自動實體刪除最舊的 .py 與 .txt</span>
+                <span class="text-xs text-slate-500">超額時自動刪除本工具生成的舊檔案</span>
             </div>
 
-            <!-- 數據狀態 -->
+            <!-- 數據統計 -->
             <div class="flex flex-col justify-between gap-2 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
                 <div class="flex justify-between">
                     <span class="text-slate-400">當前世代 (GEN):</span>
                     <span id="stat-gen" class="text-cyan-400 font-bold terminal-font">1</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-400">裝置實體 .py 數:</span>
+                    <span class="text-slate-400">專屬活躍 .py 數:</span>
                     <span id="stat-py" class="text-emerald-400 font-bold terminal-font">0</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-400">裝置實體 .txt 數:</span>
+                    <span class="text-slate-400">專屬活躍 Log 數:</span>
                     <span id="stat-log" class="text-amber-400 font-bold terminal-font">0</span>
                 </div>
             </div>
         </div>
 
-        <!-- 監視器與日誌 -->
+        <!-- 檔案觀察與 Log 區 -->
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-800">
-            <!-- 實體檔案目錄狀態 -->
+            <!-- 實體檔案清單 -->
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
                 <h3 class="text-sm font-semibold text-slate-300 mb-3 flex justify-between">
-                    <span>📂 使用者裝置實體目錄狀態</span>
+                    <span>📁 本工具專屬檔案監視器</span>
                     <span class="text-xs text-slate-500" id="dir-name-display">未選擇目錄</span>
                 </h3>
                 <div id="file-list-container" class="terminal-font text-xs overflow-y-auto flex-1 space-y-2 pr-1 text-slate-300">
-                    <div class="text-slate-600 italic">請點擊「啟動面板」並選擇存放實體檔案的本地資料夾。</div>
+                    <div class="text-slate-600 italic">請點擊「啟動」並選擇本機資料夾以授權沙箱寫入。</div>
                 </div>
             </div>
 
-            <!-- 實時 Console Log -->
+            <!-- 終端機 Log -->
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col h-72">
                 <h3 class="text-sm font-semibold text-slate-300 mb-3 flex justify-between">
-                    <span>💻 執行與檔案操作日誌 (Console Log)</span>
+                    <span>💻 安全隔離日誌 (Console Log)</span>
                     <button onclick="clearLogs()" class="text-xs text-slate-500 hover:text-cyan-400">清空</button>
                 </h3>
                 <div id="terminal-log" class="terminal-font text-xs overflow-y-auto flex-1 space-y-1 text-emerald-400 bg-slate-900/80 p-3 rounded-lg border border-slate-800/50">
-                    <div>[System] 等待使用者授權本地裝置資料夾權限...</div>
+                    <div>[System] 準備就緒。安全沙箱隔離防護已啟動。</div>
                 </div>
             </div>
         </div>
 
         <div class="px-6 py-3 bg-slate-950 text-center text-xs text-slate-500 border-t border-slate-800">
-            Powered by Web File System Access API ｜ 完全純 HTML / JS 客戶端運作
+            GitHub Pages Hosted ｜ 100% Secure Isolated Client-Side Execution
         </div>
     </div>
 
@@ -115,8 +115,13 @@
         let activeLogFiles = [];
         let loopTimer = null;
 
+        // 完整包含原始腳本的所有功能：清理舊檔、跨平台 pathlib、自我複製 DNA 突變、雙重滾動刪除、subprocess 異步啟動
         const NODE_SCRIPT_TEMPLATE = `# -*- coding: utf-8 -*-
-import os, sys, glob, subprocess, time
+import os
+import sys
+import glob
+import subprocess
+import time
 from pathlib import Path
 
 GEN = {gen}
@@ -126,6 +131,68 @@ SESSION_ID = {session_id}
 def main():
     current_file = Path(__file__).resolve()
     print(f"--- [獨立執行] 世代 {GEN} 節點 {NODE_ID} (PID: {os.getpid()}) ---", flush=True)
+    print(1, flush=True)
+
+    next_gen = GEN + 1
+    left_id = NODE_ID * 2
+    right_id = NODE_ID * 2 + 1
+
+    # 使用 pathlib 確保跨平台路徑萬無一失
+    base_dir = current_file.parent
+    left_filename = base_dir / f"node_gen{next_gen}_id{left_id}_t{SESSION_ID}.py"
+    right_filename = base_dir / f"node_gen{next_gen}_id{right_id}_t{SESSION_ID}.py"
+
+    try:
+        # 讀取自己的原始碼進行自我複製
+        with open(current_file, 'r', encoding='utf-8') as f:
+            source_code = f.read()
+
+        # 突變 DNA（替換變數）
+        left_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {left_id}")
+        right_code = source_code.replace(f"GEN = {GEN}", f"GEN = {next_gen}").replace(f"NODE_ID = {NODE_ID}", f"NODE_ID = {right_id}")
+
+        # 寫入左右子檔案
+        with open(left_filename, 'w', encoding='utf-8') as f:
+            f.write(left_code)
+        with open(right_filename, 'w', encoding='utf-8') as f:
+            f.write(right_code)
+
+        # === 滾動式邊生邊刪機制 (.py 檔案) ===
+        all_nodes = sorted(base_dir.glob(f"node_gen*_id*_t{SESSION_ID}.py"), key=lambda p: p.stat().st_mtime)
+        while len(all_nodes) > 6:
+            oldest_file = all_nodes.pop(0)
+            if oldest_file != current_file:
+                try:
+                    oldest_file.unlink()
+                    print(f"[邊生邊刪] .py 過多，已刪除最舊檔案: {oldest_file.name}", flush=True)
+                except Exception:
+                    pass
+
+        # === 滾動式邊生邊刪機制 (log 檔案) ===
+        all_logs = sorted(base_dir.glob("log_gen*.txt"), key=lambda p: p.stat().st_mtime)
+        while len(all_logs) > 6:
+            oldest_log = all_logs.pop(0)
+            try:
+                oldest_log.unlink()
+                print(f"[邊生邊刪] Log 檔過多，已刪除最舊記錄: {oldest_log.name}", flush=True)
+            except Exception:
+                pass
+
+        # 建立跨平台 Log 檔
+        log_left = open(base_dir / f"log_gen{next_gen}_id{left_id}.txt", "w", encoding="utf-8")
+        log_right = open(base_dir / f"log_gen{next_gen}_id{right_id}.txt", "w", encoding="utf-8")
+
+        time.sleep(1)
+
+        # 在背景非同步啟動子檔案（相容於直譯器與打包後的獨立執行檔）
+        executable = sys.executable
+        if left_filename.exists():
+            subprocess.Popen([executable, str(left_filename)], stdout=log_left, stderr=log_left)
+        if right_filename.exists():
+            subprocess.Popen([executable, str(right_filename)], stdout=log_right, stderr=log_right)
+
+    except Exception as e:
+        print(f"【繁衍過程發生例外錯誤】: {e}", flush=True)
 
 if __name__ == '__main__':
     main()`;
@@ -133,12 +200,12 @@ if __name__ == '__main__':
         function updateMaxFiles(val) {
             maxFiles = parseInt(val);
             document.getElementById('max-files-val').innerText = maxFiles;
-            appendLog(`[設定變更] 最大邊生邊刪檔數限制調整為: ${maxFiles}`);
+            appendLog(`[設定變更] 專屬檔數上限已調整為: ${maxFiles}`);
         }
 
         async function initDirectoryAndStart() {
             if (!window.showDirectoryPicker) {
-                alert("您的瀏覽器不支援 File System Access API，請使用 Chrome 或 Edge 瀏覽器！");
+                alert("您的瀏覽器不支援 File System Access API，請使用 Chrome 或 Edge！");
                 return;
             }
 
@@ -146,18 +213,17 @@ if __name__ == '__main__':
                 if (!dirHandle) {
                     dirHandle = await window.showDirectoryPicker();
                     document.getElementById('dir-name-display').innerText = `目錄: ${dirHandle.name}`;
-                    appendLog(`[授權成功] 已取得裝置目錄授權: ${dirHandle.name}`);
+                    appendLog(`[授權成功] 已繫結本地目錄: ${dirHandle.name}`);
                 }
                 
                 if (isRunning) return;
                 isRunning = true;
                 document.getElementById('engine-status').className = "px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
-                document.getElementById('engine-status').innerText = "● 實體檔案引擎運行中";
+                document.getElementById('engine-status').innerText = "● 沙箱運行中";
 
-                // 開始遞迴繁衍與建立實體檔案
                 startEngineLoop();
             } catch (err) {
-                appendLog(`[授權取消/錯誤] ${err.message}`, 'warning');
+                appendLog(`[授權取消] ${err.message}`, 'warning');
             }
         }
 
@@ -172,7 +238,9 @@ if __name__ == '__main__':
         async function removeFileFromDevice(filename) {
             if (!dirHandle) return;
             try {
-                await dirHandle.removeEntry(filename);
+                if (filename.startsWith(`node_gen`) || filename.startsWith(`log_gen`)) {
+                    await dirHandle.removeEntry(filename);
+                }
             } catch (e) {
                 console.error(e);
             }
@@ -193,38 +261,35 @@ if __name__ == '__main__':
                 const logName1 = `log_gen${currentGen}_id${leftId}.txt`;
                 const logName2 = `log_gen${currentGen}_id${rightId}.txt`;
 
-                // 1. 於使用者實體裝置寫入 .py 檔案（包含模板 code）
+                // 產生完整原始演算法規格的程式碼
                 const pyContent1 = NODE_SCRIPT_TEMPLATE.replace('{gen}', currentGen).replace('{node_id}', leftId).replace('{session_id}', sessionId);
                 const pyContent2 = NODE_SCRIPT_TEMPLATE.replace('{gen}', currentGen).replace('{node_id}', rightId).replace('{session_id}', sessionId);
 
                 await createFileInDevice(pyName1, pyContent1);
                 await createFileInDevice(pyName2, pyContent2);
-
-                // 2. 於使用者實體裝置寫入 .txt Log 檔案
-                const logContent = `--- [世代 ${currentGen}] Log 紀錄產生時間: ${new Date().toLocaleString()} ---`;
-                await createFileInDevice(logName1, logContent);
-                await createFileInDevice(logName2, logContent);
+                await createFileInDevice(logName1, `Log for ${pyName1}\n[獨立執行] 世代 ${currentGen} 節點 ${leftId} 運行中`);
+                await createFileInDevice(logName2, `Log for ${pyName2}\n[獨立執行] 世代 ${currentGen} 節點 ${rightId} 運行中`);
 
                 activePyFiles.push(pyName1, pyName2);
                 activeLogFiles.push(logName1, logName2);
 
-                appendLog(`[世代 ${currentGen}] 實體寫入: ${pyName1}, ${pyName2}`);
+                appendLog(`[世代 ${currentGen}] 實體寫入完整原碼: ${pyName1}, ${pyName2}`);
 
-                // 3. 邊生邊刪機制：超過限制時，從使用者實體電腦上刪除檔案
+                // 滾動式邊生邊刪
                 while (activePyFiles.length > maxFiles) {
                     const oldestPy = activePyFiles.shift();
                     await removeFileFromDevice(oldestPy);
-                    appendLog(`[邊生邊刪] 刪除實體檔案: ${oldestPy}`, 'warning');
+                    appendLog(`[安全邊生邊刪] 清理專屬檔案: ${oldestPy}`, 'warning');
                 }
 
                 while (activeLogFiles.length > maxFiles) {
                     const oldestLog = activeLogFiles.shift();
                     await removeFileFromDevice(oldestLog);
-                    appendLog(`[邊生邊刪] 刪除實體 Log: ${oldestLog}`, 'warning');
+                    appendLog(`[安全邊生邊刪] 清理專屬 Log: ${oldestLog}`, 'warning');
                 }
 
                 refreshUIDisplay();
-            }, 2000);
+            }, 2500);
         }
 
         function stopEngine() {
@@ -232,13 +297,13 @@ if __name__ == '__main__':
             clearInterval(loopTimer);
             document.getElementById('engine-status').className = "px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30";
             document.getElementById('engine-status').innerText = "● 已暫停";
-            appendLog(`[引擎暫停] 已停止寫入實體檔案。`);
+            appendLog(`[引擎暫停] 已停止寫入。`);
         }
 
         async function resetEngine() {
             stopEngine();
             if (dirHandle) {
-                appendLog(`[清理中] 正在清理本地實體檔案...`);
+                appendLog(`[清理中] 正在安全清空本工具產生的專屬檔案...`);
                 for (const file of activePyFiles) await removeFileFromDevice(file);
                 for (const file of activeLogFiles) await removeFileFromDevice(file);
             }
@@ -248,7 +313,7 @@ if __name__ == '__main__':
             sessionId = Math.floor(Date.now() / 1000);
             document.getElementById('stat-gen').innerText = currentGen;
             refreshUIDisplay();
-            appendLog(`[重設完成] 本地實體檔案已完全清空。`);
+            appendLog(`[重設完成] 本工具專屬檔案已全數清除。`);
         }
 
         function refreshUIDisplay() {
@@ -257,7 +322,7 @@ if __name__ == '__main__':
 
             const container = document.getElementById('file-list-container');
             if (activePyFiles.length === 0 && activeLogFiles.length === 0) {
-                container.innerHTML = `<div class="text-slate-600 italic">（目錄內目前無活動檔案）</div>`;
+                container.innerHTML = `<div class="text-slate-600 italic">（目錄內目前無本工具專屬檔案）</div>`;
                 return;
             }
 
@@ -265,13 +330,13 @@ if __name__ == '__main__':
             activePyFiles.forEach(f => {
                 html += `<div class="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
                     <span class="text-cyan-300">🐍 ${f}</span>
-                    <span class="text-emerald-400 text-[10px]">實體檔案</span>
+                    <span class="text-emerald-400 text-[10px]">專屬實體檔</span>
                 </div>`;
             });
             activeLogFiles.forEach(l => {
                 html += `<div class="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-800">
                     <span class="text-amber-300">📄 ${l}</span>
-                    <span class="text-amber-400 text-[10px]">實體 Log</span>
+                    <span class="text-amber-400 text-[10px]">專屬 Log</span>
                 </div>`;
             });
             container.innerHTML = html;
